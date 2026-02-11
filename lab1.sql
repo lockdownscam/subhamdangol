@@ -21,7 +21,7 @@ EmployeeID ,FirstName ,LastName ,Gender ,DateofBirth ,
 Designation ,DepartmentName ,ManagerId ,JoinedDate ,Salary 
 ) values(
 '001','Season','Maharjan','M','1996-04-02','Engineer',
-'Software engineering','002','2022-11-02','5000000000'
+'Software engineering','','2022-11-02','5000000000'
 ),(
 '003','Srijana','Maharjan','F','2000-04-02','Manager',
 'Software engineering','005','2025-11-02','9000000');
@@ -55,4 +55,21 @@ from employee group by  DepartmentName;
 #8 display minimum salary from department wise
 select DepartmentName, min(Salary) as MinSalary
 from employee group by  DepartmentName;
+#10 list the employee who act as managers
+select * from employee where
+EmployeeID in (select ManagerID from employee);
 
+#update employee set
+
+
+#delete from employee where  
+
+select * from employee
+where FirstName Like 's%';
+select * from employee
+where FirstName Like '%n';
+
+select orders.orderId,
+customer.customerId, orders.ordersdate
+from orders, customer
+where orders.customerId = customer.customerId;

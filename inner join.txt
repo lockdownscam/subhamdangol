@@ -1,0 +1,10 @@
+SELECT Orders.order_id,Customers.first_name,
+  Customers.customer_id, orders.item from Orders
+  inner join Customers On 
+  Orders.customer_id = Customers.customer_id;
+
+Select Customers.customer_id, first_name, Amount date from 
+Customers right join Orders on
+Customers.customer_id = Orders.customer_id;
+
+select first_name, amount from Customers, Orders
