@@ -1,0 +1,110 @@
+-- Drop tables if they exist (for running multiple times)
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE rating CASCADE CONSTRAINTS';
+EXCEPTION WHEN OTHERS THEN NULL; END;
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE users CASCADE CONSTRAINTS';
+EXCEPTION WHEN OTHERS THEN NULL; END;
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE movie CASCADE CONSTRAINTS';
+EXCEPTION WHEN OTHERS THEN NULL; END;
+
+-- Create movie table
+CREATE TABLE movie (
+  mID NUMBER PRIMARY KEY,
+  Title VARCHAR2(100),
+  Year NUMBER,
+  Director VARCHAR2(50)
+);
+
+-- Create users table (avoid 'user' since it's a reserved word)
+CREATE TABLE users (
+  uID NUMBER PRIMARY KEY,
+  Name VARCHAR2(50)
+);
+
+-- Create rating table without auto_increment, use sequence for ratingID
+CREATE TABLE rating (
+  ratingID NUMBER PRIMARY KEY,
+  uID NUMBER,
+  mID NUMBER,
+  Rating NUMBER CHECK (Rating BETWEEN 1 AND 5),
+  ratingDate DATE,
+  FOREIGN KEY (uID) REFERENCES users(uID),
+  FOREIGN KEY (mID) REFERENCES movie(mID)
+);
+
+-- Sequence for ratingID
+CREATE SEQUENCE rating_seq START WITH 1 INCREMENT BY 1;
+
+-- Insert movies
+INSERT INTO movie VALUES (101,'Top Gun',1986,'Tony Scott');
+INSERT INTO movie VALUES (102,'Titanic',1997,'James Cameron');
+INSERT INTO movie VALUES (103,'The Lion King',1994,'Rob Minkoff');
+INSERT INTO movie VALUES (104,'Gravity',2013,'Alfonso Cuaron');
+INSERT INTO movie VALUES (105,'Harry Potter',2001,NULL);
+INSERT INTO movie VALUES (106,'Cast Away',2000,'Robert Zemeckis');
+INSERT INTO movie VALUES (107,'Spider Man',2002,'Sam Raimi');
+INSERT INTO movie VALUES (108,'The Godfather',1972,'Francis Coppola');
+
+-- Insert users
+INSERT INTO users VALUES (201,'James Dean');
+INSERT INTO users VALUES (202,'Chris Anderson');
+INSERT INTO users VALUES (203,'Ashley Burley');
+INSERT INTO users VALUES (204,'Ralph Truman');
+INSERT INTO users VALUES (205,'Gordon Maximus');
+INSERT INTO users VALUES (206,'Sarah Rodriguez');
+INSERT INTO users VALUES (207,'Darrel Sherman');
+INSERT INTO users VALUES (208,'Lisa Jackson');
+
+-- Insert ratings using sequence for ratingID
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,201,101,2,DATE '2014-03-09');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,201,101,4,DATE '2014-03-02');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,202,104,4,NULL);
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,203,107,2,DATE '2014-03-24');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,204,103,4,DATE '2014-03-17');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,204,104,2,DATE '2014-03-13');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,205,108,3,DATE '2014-03-24');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,206,102,3,DATE '2014-03-02');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,207,104,5,NULL);
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,207,108,4,DATE '2014-03-07');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,207,102,5,DATE '2014-03-26');
+INSERT INTO rating VALUES (rating_seq.NEXTVAL,208,105,2,DATE '2014-03-13');
+
+-- Sample Queries
+-- 1. Movies released after 2000
+SELECT Title, Year
+FROM movie
+WHERE Year > 2000;
+
+-- 2. Movies before 2000 with rating > 2
+SELECT m.Title, m.mID, r.Rating
+FROM movie m
+JOIN rating r ON m.mID = r.mID
+WHERE m.Year < 2000
+AND r.Rating > 2;
+
+-- 3. All ratings with user and movie info, ordered by rating desc
+SELECT r.ratingID,
+       u.Name AS UserName,
+       m.Title AS MovieTitle,
+       r.Rating,
+       r.ratingDate
+FROM rating r
+JOIN users u ON r.uID = u.uID
+JOIN movie m ON r.mID = m.mID
+ORDER BY r.Rating DESC;
+
+-- 4. Ratings grouped with concatenated movie titles using LISTAGG
+SELECT r.Rating,
+       LISTAGG(m.Title, ', ') WITHIN GROUP (ORDER BY m.Title) AS Movies
+FROM rating r
+JOIN movie m ON r.mID = m.mID
+GROUP BY r.Rating
+HAVING COUNT(DISTINCT m.mID) > 1;
+
+-- 5. Distinct movies with rating > 4
+SELECT DISTINCT m.mID, m.Title, m.Director
+FROM movie m
+JOIN rating r ON m.mID = r.mID
+WHERE r.Rating > 4;
